@@ -16,8 +16,8 @@ from links import links
 BASE_URL = "https://pitchfork.com"
 REVIEWS_URL = f"{BASE_URL}/reviews/albums"
 
-OUTPUT = "reviews.csv"
-HEADER = "text;genre;year;author;score\n"
+OUTPUT = "reviews-albums.csv"
+HEADER = "artist;title;text;genre;year;author;score\n"
 
 
 def get_review_links(page_index):
@@ -49,13 +49,27 @@ def get_review_info(url):
 
     soup = BeautifulSoup(review.content, "html.parser")
 
+    artists = soup.find_all("ul", class_="artist-list")[0]
+    artist = artists.find_all("a")[0].text
+
+    artist = artist.replace(';', ',')
+
+    title = soup.find_all(
+        "h1", class_="single-album-tombstone__review-title"
+    )[0].text
+
+    title = title.replace(';', ',')
+
     score = soup.find_all("span", class_="score")[0].text
+
     genre = soup.find_all(
         "a", class_="genre-list__link"
     )[0].text  # Get first genre
+
     year = soup.find_all(
         "span", class_="single-album-tombstone__meta-year"
     )[0].text[-4:]  # Last 4 digits are the year
+
     author = soup.find_all(
         "span", class_="authors-detail__title"
     )[0].text  # Author type (contributor, associante, etc.)
@@ -71,7 +85,7 @@ def get_review_info(url):
     # Remove line breaks and semicolons
     text = text.replace('\n', ' ').replace(';', ',')
 
-    return text, genre, year, author, score
+    return artist, title, text, genre, year, author, score
 
 
 # Create output file
@@ -81,6 +95,7 @@ if not os.path.isfile(OUTPUT):
 
 
 for page_index in range(1, 501):
+    print(f"\nReview page {page_index}")
     review_urls = get_review_links(page_index)
 
     # Sleep for 0-3 seconds to avoid scraping time out
@@ -109,16 +124,15 @@ for page_index in range(1, 501):
         if info is None:
             continue
 
-        text, genre, year, author, score = info
+        artist, title, text, genre, year, author, score = info
 
         # Create output file
         with open(OUTPUT, "a") as output:
-            output.write(f'"{text}";{genre};{year};{author};{score}\n')
+            output.write(
+                f'{artist};{title};"{text}";{genre};{year};{author};{score}\n'
+            )
 
         links.add(url)
 
         with open("links.py", "w") as links_file:
             links_file.write(f"links = {links}")
-
-
-# pprint(review_urls)
