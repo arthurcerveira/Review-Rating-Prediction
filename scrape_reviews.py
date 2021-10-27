@@ -72,7 +72,7 @@ def get_review_info(url):
 
     author = soup.find_all(
         "span", class_="authors-detail__title"
-    )[0].text  # Author type (contributor, associante, etc.)
+    )[0].text  # Author type (contributor, associate, etc.)
 
     # Get review content
     text = str()
@@ -126,7 +126,7 @@ for page_index in range(1, 501):
 
         artist, title, text, genre, year, author, score = info
 
-        # Create output file
+        # Write data to output file
         with open(OUTPUT, "a") as output:
             output.write(
                 f'{artist};{title};"{text}";{genre};{year};{author};{score}\n'
